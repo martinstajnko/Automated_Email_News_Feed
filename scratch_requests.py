@@ -1,6 +1,8 @@
 import requests
 
-# qInTitle it can be also just q
+# Sample of how to get all the articles from url api
+
+# "qInTitle" it can be also just "q"
 
 url = 'https://newsapi.org/v2/everything?' \
        'qInTitle=polkadot&'\

@@ -1,56 +1,54 @@
-import os
-import requests
-#from bs4 import BeautifulSoup
+import os 
+import yagmail 
 from dotenv import load_dotenv
+from news import NewsFeed
+import datetime
+from time import sleep
 
 
-class NewsFeed:
+while True:
 
-    """ 
-    Representing multiple news titles and links as a single string.
-    Example:
-    Hi John,
-    Here are the news in which you are interested.
-    1.) Bitcoin raises above $65000! <link>
-    ... 
-    """
-
-    load_dotenv('api_key.env')
-    api_key = os.environ.get('API_KEY')
-    base_url = 'https://newsapi.org/v2/everything?'
-    
-
-    def __init__(self, interest, from_date, to_date, language):
-        self.interest = interest
-        self.from_date = from_date
-        self.to_date = to_date
-        self.language = language
+    if datetime.datetime.now().hour == 8 and datetime.datetime.now().minute == 00:
+        print('Executing!')    
 
 
-    def get(self):
-
-        url = f'{self.base_url}' \
-              f'qInTitle={self.interest}&'\
-              f'from={self.from_date}&'\
-              f'to={self.to_date}&'\
-              f'language={self.language}&'\
-              f'apiKey={self.api_key}'
-
-        response = requests.get(url)
-        content = response.json()
-        articles = content['articles']
-        print(articles)
-        print('-' * 10)
-        email_body = ''
-        y = 0
-        for article in articles:
-            y = int(y)
-            y = y + 1
-            email_body = email_body + str(y) + '\n' + article['title'] + '\n' + article['url'] + '\n'
-
-        return email_body
+        load_dotenv('credentials.env')
 
 
+        def get_sender_credentials():
+            email = os.environ.get('EMAIL')
+            psw = os.environ.get('PSW')
+            return email, psw
 
-new_feed = NewsFeed(interest='Crypto', from_date='2021-10-18', to_date='2021-10-18', language='en')
-print(new_feed.get())
+        def get_receivers():
+            receivers = os.environ.get('RECEIVERS')
+            receivers = receivers.split(', ')
+            return receivers
+
+        def get_interests():
+            interests = os.environ.get('INTERESTS')
+            interests = interests.split(', ')
+            return interests
+
+        def send_news_feed():
+            email, psw = get_sender_credentials()    
+            email = yagmail.SMTP(user=email, password=psw)
+            receivers = get_receivers()
+            interests = get_interests()
+            for (receiver, interest) in zip(receivers, interests):
+                today = datetime.datetime.now().strftime('%Y-%m-%d')
+                yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+                news_feed = NewsFeed(interest=interest, 
+                                    from_date=yesterday, 
+                                    to_date=today, 
+                                    language='en') 
+                email.send(to=receiver, 
+                            subject=f'NEWS ABOUT {interest}', 
+                            contents=f'Hi, this is me news bot!\n I have recent news about {interest} for you!\n{news_feed.get()}\n\n Sincerely, \n News Bot')
+
+                #print(f'NEWS ABOUT {interests[0]}')
+                #print(f'Hi, this is me news bot!\n I have recent news about {interests[0]} for you!\n{news_feed.get()}\n News Bot')
+        
+        send_news_feed()
+
+    sleep(60)
