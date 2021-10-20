@@ -28,27 +28,32 @@ class NewsFeed:
 
 
     def get(self):
-
-        url = f'{self.base_url}' \
-              f'qInTitle={self.interest}&'\
-              f'from={self.from_date}&'\
-              f'to={self.to_date}&'\
-              f'language={self.language}&'\
-              f'apiKey={self.api_key}'
-
-        response = requests.get(url)
-        content = response.json()
-        articles = content['articles']
-        #print(articles)
-        #print('-' * 10)
+        url = self._build_url()
+        articles = self._get_articles(url)
         y = 0
         email_body = ''
         for article in articles:
             y = int(y)
             y = y + 1
             email_body = email_body + str(y) + '\n' + article['title'] + '\n' + article['url'] + '\n' + '\n'
-
         return email_body
+
+
+    def _get_articles(self, url):
+        response = requests.get(url)
+        content = response.json()
+        articles = content['articles']
+        return articles
+
+
+    def _build_url(self):
+        url = f'{self.base_url}' \
+              f'qInTitle={self.interest}&'\
+              f'from={self.from_date}&'\
+              f'to={self.to_date}&'\
+              f'language={self.language}&'\
+              f'apiKey={self.api_key}'             
+        return url
 
 
 if __name__ == "__main__":
